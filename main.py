@@ -30,18 +30,17 @@ def getArgumentList(functionName):
     return glibc[functionName][0]['arguments']
 
 
+def getArgumentNumber(functionName):
+    glibc = fm.openData('glibc.dict')
+    return int(glibc[functionName][0]['number of arguments'].replace(' or more', ''))
+
+
 def convertArgListToArgTypeList(arguments):
     result = []
     return result
 
 
-inputSize = 1  # 만들 input의 개수
-outputs = []
-while 1:
-    inputs = makeInputList(inputSize)
-    mutateInputList(inputs, 10)
-    result = target.target(inputs)
-    if result == -1:
-        break
-
-print(outputs)
+inputSize = getArgumentNumber(getFunctionName())
+inputs = makeInputList(inputSize)
+mutateInputList(inputs, 10)
+result = target.target(inputs)
