@@ -9,8 +9,6 @@ target = CDLL(shared_lib)
 
 target.targetInfo.restype = ctypes.c_char_p
 target.target.argtypes = (ctypes.Array, )
-# returnVal = target.targetInfo()
-
 
 def makeInputList(size):
     return (ctypes.POINTER(ctypes.c_uint8) * size)()
