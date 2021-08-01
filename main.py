@@ -4,7 +4,7 @@ import fileManagement as fm
 import random
 import secrets
 
-shared_lib = '/home/jeun/PycharmProjects/test/target.so'
+shared_lib = '/home/jeun/PycharmProjects/glibcFuzzer/target.so'
 target = CDLL(shared_lib)
 
 target.targetInfo.restype = ctypes.c_char_p
