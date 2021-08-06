@@ -10,6 +10,7 @@ target = CDLL(shared_lib)
 target.targetInfo.restype = ctypes.c_char_p
 target.target.argtypes = (ctypes.Array, )
 
+
 def makeInputList(size):
     return (ctypes.POINTER(ctypes.c_uint8) * size)()
 
@@ -40,5 +41,5 @@ def convertArgListToArgTypeList(arguments):
 
 inputSize = getArgumentNumber(getFunctionName())
 inputs = makeInputList(inputSize)
-mutateInputList(inputs, 10)
-result = target.target(inputs)
+mutateInputList(inputs, random.randint(1, 100))
+target.target(inputs)

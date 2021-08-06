@@ -60,11 +60,11 @@ def convertArgsToStr(arguments):
     return result[:-2]
 
 
-glibc = fm.openData('targetGlibc.dict')
-
+'''
 sampleFunction = random.choice(list(glibc.keys()))
 print(sampleFunction)
 code = generate(glibc[sampleFunction][0]['header file'], sampleFunction, glibc[sampleFunction][0]['arguments'])
 f = open('target.c', 'w')
 f.write(code)
 f.close()
+'''
