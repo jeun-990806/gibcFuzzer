@@ -1,5 +1,6 @@
 import fileManagement
 import os
+import subprocess
 
 sourceFilePath = 'structure_list/'
 destinationPath = 'structure_proto_files/'
@@ -21,7 +22,7 @@ def readListFileContent(fileName, path=None):
 
 
 def convertTypeToProtobufType(fieldType, fieldName):
-    converted = ''
+    converted = 'optional '
     if '[' in fieldName:
         converted = 'repeated '
     if 'unsigned' in fieldType:
@@ -40,9 +41,16 @@ def convertTypeToProtobufType(fieldType, fieldName):
         return converted + 'int32'
 
 
-for elem in getStructListFileList():
-    if len(readListFileContent(elem)) != 0:
-        print(elem)
-        print('origin:', end=' ')
-        print(readListFileContent(elem))
-        print([convertTypeToProtobufType(dataType.strip().replace('  ', ' '), name) for dataType, name in readListFileContent(elem)])
+fieldInfo = fileManagement.openData('structure_list/struct_test.list')
+fileContent = 'syntax = \"proto2\";\npackage glibcFuzzer;\n\nmessage Structure {\n\t'
+idx = 1
+
+for fieldType, fieldName in fieldInfo:
+    fileContent += convertTypeToProtobufType(fieldType, fieldName) + ' ' + fieldName + ' = %d;\n\t' % idx
+    idx += 1
+
+fileContent += '}'
+newProtoFile = open('structure_proto_files/struct_test.proto', 'w')
+newProtoFile.write(fileContent)
+newProtoFile.close()
+subprocess.call('protoc -I=structure_proto_files --python_out=. structure_proto_files/struct_test.proto', shell=True)
