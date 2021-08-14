@@ -8,5 +8,5 @@ fuzzer (for glibc functions)
 ---
 ## 사용법
 
-main.py [targetCode]
+main.py [targetCode]  
 target code가 directory인 경우, directory 내의 전체 파일에 대해 fuzzing을 
