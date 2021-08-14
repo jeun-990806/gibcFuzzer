@@ -1,14 +1,22 @@
+import ctypes
+
 import defaultMutator
 import random
 
 
 class ByteMutator(defaultMutator.DefaultMutator):
-    def __init__(self, maxLength=4):
-        super().__init__()
-        self.__maxLength = maxLength
-        self.__newMutation = bytearray(maxLength)
+    __maxLength = 0
 
-    def getByteMutation(self):
+    def __init__(self, dataType='byte', signed=True):
+        super().__init__()
+        self.__dataType = dataType
+        self.__signed = signed
+        self.__maxLength = 4
+        if dataType == 'str':
+            self.__maxLength = 30
+        self.__newMutation = bytearray(self.__maxLength)
+
+    def getMutation(self):
         op = random.randint(0, 6)
         if op == 0:
             self.__eraseBytes()
@@ -22,7 +30,10 @@ class ByteMutator(defaultMutator.DefaultMutator):
             self.__changeBit()
         elif op == 5:
             self.__shuffleBytes()
-        return self.__newMutation
+        if self.__dataType == 'byte':
+            return bytes(self.__newMutation)
+        elif self.__dataType == 'str':
+            return ctypes.create_string_buffer(bytes(self.__newMutation), self.__maxLength + 1)
 
     # noinspection PyMethodMayBeStatic
     def __randCh(self):
@@ -48,7 +59,7 @@ class ByteMutator(defaultMutator.DefaultMutator):
         kMinBytesToInsert = 3
         if length + kMinBytesToInsert < self.__maxLength:
             maxBytesToInsert = min([self.__maxLength - length, 128])
-            n = random.randint(kMinBytesToInsert, maxBytesToInsert - kMinBytesToInsert)
+            n = random.randint(kMinBytesToInsert, maxBytesToInsert + 1)
             idx = random.randint(0, length)
             byte = random.choice([random.randint(0, 255), 0, 255])
             for i in range(0, n):
@@ -56,14 +67,20 @@ class ByteMutator(defaultMutator.DefaultMutator):
 
     def __changeBytes(self):
         length = len(self.__newMutation)
-        if length <= self.__maxLength:
-            idx = random.randint(0, length - 1)
+        if 0 < length <= self.__maxLength:
+            if length == 1:
+                idx = 0
+            else:
+                idx = random.randint(0, length - 1)
             self.__newMutation[idx] = self.__randCh()
 
     def __changeBit(self):
         length = len(self.__newMutation)
-        if length <= self.__maxLength:
-            idx = random.randint(0, length - 1)
+        if 0 < length <= self.__maxLength:
+            if length == 1:
+                idx = 0
+            else:
+                idx = random.randint(0, length - 1)
             self.__newMutation[idx] ^= 1 << random.randint(0, 7)
 
     def __shuffleBytes(self):
