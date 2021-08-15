@@ -1,20 +1,37 @@
+import os
 import ctypes
+import struct
 
 import defaultMutator
 import random
 
 
 class ByteMutator(defaultMutator.DefaultMutator):
+    __absolutePath = os.path.abspath(__file__)[:os.path.abspath(__file__).rfind('/')]
     __maxLength = 0
 
-    def __init__(self, dataType='byte', signed=True):
+    def __init__(self, dataType, signed=True):
         super().__init__()
         self.__dataType = dataType
         self.__signed = signed
-        self.__maxLength = 4
-        if dataType == 'str':
-            self.__maxLength = 30
+        self.__maxLength = self.__getNBytes(dataType)
         self.__newMutation = bytearray(self.__maxLength)
+
+    # noinspection PyMethodMayBeStatic
+    def __getNBytes(self, dataType):
+        bytesWithType = {1: ['char'],
+                         2: ['short'],
+                         4: ['int', 'float'],
+                         8: ['long long', 'double', 'long double']}
+        # long type은 운영체제에 따라 크기가 다르기 때문에 별도의 계산이 필요하다.
+        byteSizeCalculator = ctypes.CDLL(self.__absolutePath + '/util/byteSizeCalculator.so')
+        bytesWithType[byteSizeCalculator.longTypeBytes()].append('long')
+
+        for byte in bytesWithType.keys():
+            if dataType in bytesWithType[byte]:
+                return byte
+        # str 자료형의 max byte를 100으로 설정 (이 부분 잘 수정해 볼 것.)
+        return 100
 
     def getMutation(self):
         op = random.randint(0, 6)
@@ -30,10 +47,13 @@ class ByteMutator(defaultMutator.DefaultMutator):
             self.__changeBit()
         elif op == 5:
             self.__shuffleBytes()
-        if self.__dataType == 'byte':
-            return bytes(self.__newMutation)
+        if self.__dataType == 'int' or self.__dataType == 'long' or self.__dataType == 'short'\
+                or self.__dataType == 'long long' or self.__dataType == 'char':
+            return int.from_bytes(self.__newMutation, byteorder='big', signed=self.__signed)
         elif self.__dataType == 'str':
             return ctypes.create_string_buffer(bytes(self.__newMutation), self.__maxLength + 1)
+        elif self.__dataType == 'float':
+            return struct.unpack('f', self.__newMutation)[0]
 
     # noinspection PyMethodMayBeStatic
     def __randCh(self):
