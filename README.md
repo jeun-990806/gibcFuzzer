@@ -3,9 +3,10 @@
 fuzzer (for glibc functions)
 + Automatically generate test code
 + (Also) Automatically generate and mutate new inputs
-+ execution strace
++ execution ftrace
 
 ---
 ## 사용법
 
-start.sh을 실행합니다. start.sh는 무작위로 10개의 glibc function을 뽑아, 각각 5번 생성된 mutation과 함께 실행하여 결과를 저장합니다. (별도의 옵션 없음)
+main.py [targetCode]  
+target code가 directory인 경우, directory 내의 전체 파일에 대해 fuzzing을 수행합니다. 
