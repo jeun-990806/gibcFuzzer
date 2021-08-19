@@ -1,7 +1,7 @@
 import sys
 import os
 
-import glibcFuzzer
+import fuzzer
 import targetCodeBuilder
 import targetFunctionScanner
 
@@ -21,7 +21,7 @@ if len(sys.argv) > 2:
     codeGenerator = targetCodeBuilder.Builder(path, targetName)
     codeGenerator.build()
 
-    fuzzer = glibcFuzzer.Fuzzer(targetFile)
+    fuzzer = fuzzer.Fuzzer(targetFile)
     syscallSet = set()
     for i in range(1000):
         executionResult = fuzzer.executeWithMutationSequence()
