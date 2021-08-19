@@ -2,8 +2,8 @@ import re
 
 
 class TargetFunctionScanner:
-    def __init__(self, path, functionName):
-        self.__sourceFilePath = path
+    def __init__(self, srcPath, functionName):
+        self.__sourceFilePath = srcPath
         self.__targetFunctionName = functionName
         self.__sourceCode = self.__getFileContent()
         self.__functionDeclaration = self.__getPartOfFunction(self.__getFunctionDeclarationLine(), part=0)
@@ -55,7 +55,7 @@ class TargetFunctionScanner:
     def getReturnType(self):
         return self.__getPartOfFunction(part=1)
 
-    def propertiesToStr(self):
+    def __propertiesToStr(self):
         properties = 'NAME=%s;\nRETURN_TYPE=%s;\n' % (self.__targetFunctionName, self.getReturnType())
         properties += 'HEADER_FILES=%s;\n' % ' '.join(self.getHeaderFiles())
         idx = 1
@@ -69,5 +69,6 @@ class TargetFunctionScanner:
         propertyFileName = self.__sourceFilePath[self.__sourceFilePath.rfind('/') + 1:self.__sourceFilePath.rfind('.')]\
                            + '.pro'
         propertyFile = open(propertyFilePath + propertyFileName, 'w')
-        propertyFile.write(self.propertiesToStr())
+        propertyFile.write(self.__propertiesToStr())
         propertyFile.close()
+        return propertyFilePath + propertyFileName

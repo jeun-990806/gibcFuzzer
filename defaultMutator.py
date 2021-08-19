@@ -4,7 +4,7 @@ import fileManagement
 
 
 class DefaultMutator:
-    __usedInputList = []
+    _usedInputList = []
 
     def __init__(self):
-        self.__usedInputList = []
+        self._usedInputList = []

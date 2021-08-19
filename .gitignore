@@ -1,2 +1,11 @@
 # Project exclude paths
-/venv/
+/venv/.venv
+/target_codes/
+/symbolic_constants_list/
+/structure_list/
+/properties/
+/glibc_data/
+/memo.py
+/target.c
+/target.cpython-38-x86_64-linux-gnu.so
+/target.o
