@@ -2,11 +2,10 @@ import copy
 import cffi
 import struct
 
-import defaultMutator
 import random
 
 
-class ByteMutator(defaultMutator.DefaultMutator):
+class ByteMutator:
     __ffi = cffi.FFI()
 
     def __init__(self, varType='int', maxLength=4):
@@ -38,7 +37,7 @@ class ByteMutator(defaultMutator.DefaultMutator):
 
         if self.__varType == 'float' or self.__varType == 'double':
             return self.__ffi.cast(self.__varType, random.uniform(-100, 100))
-        if self.__varType == 'char*':
+        if 'char' in self.__varType and '*' in self.__varType:
             return self.__ffi.new('char []', bytes(self.__currentMutation))
         return self.__ffi.cast(self.__varType, int.from_bytes(self.__currentMutation, byteorder='big'))
 

@@ -1,6 +1,5 @@
 import random
 
-import defaultMutator
 import byteMutator
 import importlib
 import ctypes
@@ -9,7 +8,7 @@ import sys
 import fileManagement
 
 
-class StructureMutator(defaultMutator.DefaultMutator):
+class StructureMutator:
     __structureListFilePath = ''
     __structureName = ''
 

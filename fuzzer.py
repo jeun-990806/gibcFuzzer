@@ -1,3 +1,4 @@
+import os
 import re
 import importlib
 import cffi
@@ -7,8 +8,12 @@ import byteMutator
 
 class Fuzzer:
     __ffi = cffi.FFI()
-
     __mutators = []
+    __foundedSyscallSet = set()
+    __inputSyscallsTable = []
+    __pid = str(os.getpid())
+
+    __executionNum = 0
 
     def __init__(self, path):
         self.__targetCodePath = path
@@ -34,17 +39,42 @@ class Fuzzer:
         return [mutator.getMutation() for mutator in self.__mutators]
 
     def executeWithMutationSequence(self):
+        self.__executionNum += 1
         newInput = self.__makeMutationSequence()
         self.__targetFunction.target(*newInput)
-        traceLog = open('/sys/kernel/debug/tracing/trace', 'r')
-        return newInput, self.__getSyscallSet(traceLog.readlines())
+        syscallSet = self.__getSyscallSet()
+        if self.__checkNewSyscall(syscallSet):
+            self.__inputSyscallsTable.append((newInput, syscallSet))
+            print('%dth execution: ' % self.__executionNum, end='')
+            print(newInput, end=', ')
+            print('called syscall numbers: ', end='')
+            print(syscallSet)
 
-    def __getSyscallSet(self, traceLog):
-        syscallSet = []
-        logging = False
+    def __checkNewSyscall(self, newSyscalls):
+        if len(newSyscalls - self.__foundedSyscallSet) != 0:
+            self.__updateFoundedSyscalls(newSyscalls)
+            return True
+        return False
+
+    def __getTraceLog(self):
+        traceFile = open('/sys/kernel/debug/tracing/trace', 'r')
+        traceLog = traceFile.readlines()
+        traceFile.close()
+        return traceLog
+
+    def __getSyscallSet(self):
+        traceLog = self.__getTraceLog()
+        syscallSet = set()
+        readOn = False
         for line in traceLog:
-            if 'mark_write:' in line:
-                logging = True ^ logging
-            if logging and 'sys_enter' in line:
-                syscallSet.append(line[line.find('NR ') + 3:line.rfind(' (')])
+            if 'start_ftrace' in line:
+                readOn = True
+                continue
+            if 'stop_ftrace' in line:
+                break
+            if readOn and 'sys_enter:' in line and self.__pid in line:
+                syscallSet.add(line[line.find('NR ') + 3:line.rfind(' (')])
         return syscallSet
+
+    def __updateFoundedSyscalls(self, newSyscalls):
+        self.__foundedSyscallSet = self.__foundedSyscallSet | newSyscalls

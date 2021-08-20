@@ -38,6 +38,8 @@ class TargetFunctionScanner:
         argumentRE = '([a-zA-Z_][a-zA-Z0-9_\s]*[a-zA-Z0-9_][*]*)\s([*]*[a-zA-Z_][a-zA-Z0-9_]*)'
         if self.__functionDeclaration is not None:
             argumentsStr = self.__getPartOfFunction(self.__functionDeclaration, 2)
+            if argumentsStr == 'void':
+                return []
             arguments = re.findall(argumentRE, argumentsStr)
             argumentsConv = []
             for argType, argName in arguments:              # 띄어쓰기에 따라 asterisk가 매개변수 이름에 붙어 있을 수도 있음.

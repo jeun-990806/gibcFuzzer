@@ -1,5 +1,7 @@
 import sys
 import os
+import time
+import subprocess
 
 import fuzzer
 import targetCodeBuilder
@@ -22,14 +24,10 @@ if len(sys.argv) > 2:
     codeGenerator.build()
 
     fuzzer = fuzzer.Fuzzer(targetFile)
-    syscallSet = set()
-    for i in range(1000):
-        executionResult = fuzzer.executeWithMutationSequence()
-        newSyscallSet = set(executionResult[1])
-        if len(newSyscallSet - syscallSet) != 0:
-            print('%dth execution:' % i)
-            print(executionResult[0])
-            print(newSyscallSet)
-            syscallSet = syscallSet | newSyscallSet
+    # tracer set
+    subprocess.call('echo 1 > /sys/kernel/debug/tracing/events/raw_syscalls/sys_enter/enable', shell=True)
+    subprocess.call('echo function > /sys/kernel/debug/tracing/current_tracer', shell=True)
 
+    for i in range(10000):
+        fuzzer.executeWithMutationSequence()
     del fuzzer

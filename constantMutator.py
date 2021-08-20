@@ -1,9 +1,8 @@
-import defaultMutator
 import random
 import fileManagement
 
 
-class ConstantMutator(defaultMutator.DefaultMutator):
+class ConstantMutator:
     __symbolicConstantsPath = ''
     __headerFiles = []
     symbolicConstantsList = []
