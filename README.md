@@ -8,5 +8,5 @@ fuzzer (for glibc functions)
 ---
 ## 사용법
 
-main.py [targetCode] [targetFunction]
-(targetCode 내에 targetFunction
+sudo python3 main.py [targetCode] [targetFunction]  
+(targetCode 내에 targetFunction이 정의되어 있어야 함.
