@@ -17,7 +17,7 @@ class TargetFunctionScanner:
     # 함수 선언이 이루어진 라인을 탐색하여 반환
     def __getFunctionDeclarationLine(self):
         for line in self.__sourceCode:
-            if self.__targetFunctionName in line:
+            if self.__targetFunctionName in line and '(' in line:
                 return line
         print('TargetFunctionScanner: no target function ' + self.__targetFunctionName +
               ', (' + self.__sourceFilePath + ')')
@@ -37,7 +37,7 @@ class TargetFunctionScanner:
     def getArguments(self):
         argumentRE = '([a-zA-Z_][a-zA-Z0-9_\s]*[a-zA-Z0-9_][*]*)\s([*]*[a-zA-Z_][a-zA-Z0-9_]*)'
         if self.__functionDeclaration is not None:
-            argumentsStr = self.__getPartOfFunction(self.__functionDeclaration, 2)
+            argumentsStr = self.__getPartOfFunction(self.__functionDeclaration.replace('restrict ', ''), 2)
             if argumentsStr == 'void':
                 return []
             arguments = re.findall(argumentRE, argumentsStr)

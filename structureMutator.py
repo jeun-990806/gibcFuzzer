@@ -1,53 +1,46 @@
-import random
-
 import byteMutator
-import importlib
-import ctypes
-import sys
-
-import fileManagement
+import cffi
+import re
 
 
 class StructureMutator:
-    __structureListFilePath = ''
-    __structureName = ''
+    __fields = []
+    __mutation = []
 
-    __structure = None
-    __field = []
+    __mutators = []
+    __ffi = cffi.FFI()
 
-    __insideMutators = []
-
-    def __init__(self, structureName, listFilePath=None, protobufFilePath=None):
-        super().__init__()
-        if listFilePath is not None:
-            self.__structureListFilePath = listFilePath
+    def __init__(self, structureName, structureFilePath=''):
         self.__structureName = structureName
-        self.__field = fileManagement.openData(listFilePath + structureName + '.list')
-        sys.path.insert(1, protobufFilePath)  # 다른 폴더에 존재하는 .py files(.proto 파일의 컴파일 결과)를 import하기 위함
-        for field in self.__field:
-            maxLength = self.__numberOfBytes(field[0])
-            self.__insideMutators.append(byteMutator.ByteMutator(maxLength))
+        if structureFilePath == '':
+            self.__structureFilePath = 'structures/' + structureName + '.structure'
+        else:
+            self.__structureFilePath = structureFilePath
+        with open(self.__structureFilePath, 'r') as f:
+            self.__structureInfo = ''.join(f.readlines())
+        self.__setFields()
+        self.__setMutators()
 
-    # noinspection PyMethodMayBeStatic
-    def __numberOfBytes(self, fieldType):
-        if fieldType == 'int':
-            return 4
-        elif fieldType == 'char':
-            return 1
+    def __setFields(self):
+        argumentRE = '^FIELD[1-9][0-9]*=([^;]*);'
+        self.__fields = re.findall(argumentRE, self.__structureInfo, re.MULTILINE)
+
+    def printFields(self):
+        print(self.__fields)
+
+    def __setMutators(self):
+        for field in self.__fields:
+            if field == 'float':
+                newMutator = byteMutator.ByteMutator(field, 4)
+            elif 'char' not in field and '*' not in field:
+                newMutator = byteMutator.ByteMutator(field, self.__ffi.sizeof(field))
+            else:
+                newMutator = byteMutator.ByteMutator(field, 50)  # 문자열 최대 길이
+            self.__mutators.append(newMutator)
+
+    def __mutateStructrue(self):
+        self.__mutation = [mutator.getMutation() for mutator in self.__mutators]
 
     def getMutation(self):
-        protobuf = importlib.import_module(self.__structureName + '_pb2')
-        self.__structure = protobuf.Structure()
-        idx = 0
-        for field in self.__field:
-            mutation = self.__insideMutators[idx].getMutation()
-            if field[0] == 'int' or field[0] == 'char':
-                mutation = int.from_bytes(mutation, byteorder='big', signed=True)
-            setattr(self.__structure, field[1], mutation)
-            idx += 1
-
-    def printStructures(self):
-        print(self.__structureName)
-        for field in self.__field:
-            print(field[1], end=': ')
-            print(getattr(self.__structure, field[1]))
+        self.__mutateStructrue()
+        return self.__mutation

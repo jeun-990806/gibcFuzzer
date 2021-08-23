@@ -25,9 +25,12 @@ if len(sys.argv) > 2:
 
     fuzzer = fuzzer.Fuzzer(targetFile)
     # tracer set
+    subprocess.call('echo "*sys_enter*" > /sys/kernel/debug/tracing/set_ftrace_filter', shell=True)
+    subprocess.call('echo "*mark_write*" >> /sys/kernel/debug/tracing/set_ftrace_filter', shell=True)
     subprocess.call('echo 1 > /sys/kernel/debug/tracing/events/raw_syscalls/sys_enter/enable', shell=True)
     subprocess.call('echo function > /sys/kernel/debug/tracing/current_tracer', shell=True)
 
-    for i in range(10000):
+    startTime = time.time()
+    while time.time() - startTime < 300:
         fuzzer.executeWithMutationSequence()
     del fuzzer
