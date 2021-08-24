@@ -2,17 +2,17 @@ import os
 import re
 import importlib
 import cffi
-import traceLogReader
 
 import fileManagement
+import dataType
 import cDataMaker
-import byteMutator
 
 
 class Fuzzer:
     __ffi = cffi.FFI()
     __mutators = []
     __cDataMaker = cDataMaker.CDataMaker()
+    __arguments = []
     __foundedSyscallSet = set()
     __inputSyscallsTable = []
     __pid = str(os.getpid())
@@ -23,7 +23,7 @@ class Fuzzer:
         self.__targetCodePath = path
         self.__targetFileName = path[path.rfind('/') + 1:path.rfind('.')]
         self.__properties = ''.join(open('properties/' + self.__targetFileName + '.pro', 'r').readlines())
-        self.__targetFunctionArguments = self.__getArguments()
+        self.__getArguments()
         self.__setMutators()
         self.__targetFunction = importlib.import_module('target').lib
 
@@ -32,30 +32,21 @@ class Fuzzer:
 
     def __getArguments(self):
         argumentRE = '^ARG[1-9][0-9]*=([^;]*);'
-        return re.findall(argumentRE, self.__properties, re.MULTILINE)
+        for arg in re.findall(argumentRE, self.__properties, re.MULTILINE):
+            self.__arguments.append(dataType.DataType(arg))
 
     def __setMutators(self):
-        for arg in self.__targetFunctionArguments:
-            if arg == 'float':
-                newMutator = byteMutator.ByteMutator(4, 4)
-            elif 'char' not in arg and '*' not in arg:
-                newMutator = byteMutator.ByteMutator(self.__ffi.sizeof(arg), self.__ffi.sizeof(arg))
-            else:
-                newMutator = byteMutator.ByteMutator(1, 100)  # 문자열 최대 길이
-            self.__mutators.append(newMutator)
+        self.__mutators = [arg.getMutator() for arg in self.__arguments]
 
     def __makeMutationSequence(self):
         return [mutator.getMutation() for mutator in self.__mutators]
 
-    def __getMutationSequence(self):
-        return [mutator.getMutation() for mutator in self.__mutators]
-
-    def __exportInputs(self):
+    def __exportInputs(self, mutations):
         if not os.path.isdir('results/' + self.__targetFileName):
             os.mkdir('results/' + self.__targetFileName)
             os.mkdir('results/' + self.__targetFileName + '/input')
             os.mkdir('results/' + self.__targetFileName + '/output')
-        fileManagement.saveData(self.__getMutationSequence(), 'results/' + self.__targetFileName + '/input/' +
+        fileManagement.saveData(mutations, 'results/' + self.__targetFileName + '/input/' +
                                 self.__targetFileName + '_input_' + str(self.__executionNum) + '.list')
 
     def __exportOutputs(self):
@@ -72,8 +63,8 @@ class Fuzzer:
     def executeWithMutationSequence(self):
         self.__executionNum += 1
         newInput = self.__makeMutationSequence()
-        self.__targetFunction.target(*[self.__cDataMaker.castToCDataType(i, t) for i, t in
-                                       zip(newInput, self.__targetFunctionArguments)])
+        self.__targetFunction.target(*[self.__cDataMaker.castToCDataType(i, t.makeFormalDataType()) for i, t in
+                                       zip(newInput, self.__arguments)])
 
         syscallSet = self.__getSyscallSet()
         if self.__checkNewSyscall(syscallSet):
@@ -96,11 +87,6 @@ class Fuzzer:
         return traceLog
 
     def __getSyscallSet(self):
-        '''
-        reader = traceLogReader.lib
-        syscallSet = set(self.__ffi.unpack(reader.getSyscalls(str(self.__pid).encode('utf-8')), 100))
-        only use python (with __getTraceLog)
-        '''
         traceLog = self.__getTraceLog()
         syscallSet = set()
         readOn = False

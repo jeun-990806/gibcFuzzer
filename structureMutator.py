@@ -1,4 +1,5 @@
 import byteMutator
+import dataType
 import cffi
 import re
 
@@ -23,20 +24,13 @@ class StructureMutator:
 
     def __setFields(self):
         argumentRE = '^FIELD[1-9][0-9]*=([^;]*);'
-        self.__fields = re.findall(argumentRE, self.__structureInfo, re.MULTILINE)
+        self.__fields = [dataType.DataType(fieldName) for fieldName in re.findall(argumentRE, self.__structureInfo, re.MULTILINE)]
 
     def printFields(self):
         print(self.__fields)
 
     def __setMutators(self):
-        for field in self.__fields:
-            if field == 'float':
-                newMutator = byteMutator.ByteMutator(field, 4)
-            elif 'char' not in field and '*' not in field:
-                newMutator = byteMutator.ByteMutator(field, self.__ffi.sizeof(field))
-            else:
-                newMutator = byteMutator.ByteMutator(field, 50)  # 문자열 최대 길이
-            self.__mutators.append(newMutator)
+        self.__mutators = [fieldObj.getMutator() for fieldObj in self.__fields]
 
     def __mutateStructrue(self):
         self.__mutation = [mutator.getMutation() for mutator in self.__mutators]
