@@ -6,25 +6,25 @@ import dataType
 class CDataMaker:
     __ffi = cffi.FFI()
 
-    def __checkIsSigned(self, dataType):
-        if 'unsigned' in dataType or dataType == 'char':
+    def __checkIsSigned(self, dataTypeName):
+        if 'unsigned' in dataTypeName or dataTypeName == 'char':
             return False
         return True
 
     def castToCDataType(self, byteSequence, dataTypeName):
-        dataType = dataType.DataType(dataTypeName)
-        category = dataType.getCategory()
+        cDataType = dataType.DataType(dataTypeName)
+        category = cDataType.getCategory()
         if category == 'int':
-            return self.__ffi.cast(dataType.makeFormalDataType(),
+            return self.__ffi.cast(cDataType.makeFormalDataType(),
                                    int.from_bytes(byteSequence, byteorder='big',
                                                   signed=self.__checkIsSigned(dataTypeName)))
         elif category == 'floating-point':
-            return self.__ffi.cast(dataType.makeFormalDataType(), struct.unpack(dataTypeName[0], byteSequence)[0])
+            return self.__ffi.cast(cDataType.makeFormalDataType(), struct.unpack(dataTypeName[0], byteSequence)[0])
         elif category == 'string':
             return self.__ffi.new('char []', bytes(byteSequence))
         elif '*' in dataTypeName:
             value = self.castToCDataType(byteSequence, dataTypeName[:-1])
-            return self.__ffi.new(dataType.makeFormalDataType(), value)
+            return self.__ffi.new(cDataType.makeFormalDataType(), value)
         raise NameError(dataTypeName + 'is not basic C Data Type.')
 
 

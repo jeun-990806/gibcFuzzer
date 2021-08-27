@@ -30,6 +30,11 @@ if len(sys.argv) > 2:
     subprocess.call('echo 1 > /sys/kernel/debug/tracing/events/raw_syscalls/sys_enter/enable', shell=True)
     subprocess.call('echo function > /sys/kernel/debug/tracing/current_tracer', shell=True)
 
+    if not os.path.isdir('result/' + targetName):
+        os.mkdir('result/' + targetName)
+        os.mkdir('result/' + targetName + '/input/')
+        os.mkdir('result/' + targetName + '/output/')
+
     startTime = time.time()
     while time.time() - startTime < 300:
         fuzzer.executeWithMutationSequence()

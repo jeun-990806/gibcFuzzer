@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$/../glibcFuzzer">
-      <excludeFolder url="file://$MODULE_DIR$/../glibcFuzzer/venv" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/.idea" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/.idea/inspectionProfiles" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/properties" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/symbolic_constants_list" isTestSource="false" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

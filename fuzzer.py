@@ -42,20 +42,11 @@ class Fuzzer:
         return [mutator.getMutation() for mutator in self.__mutators]
 
     def __exportInputs(self, mutations):
-        if not os.path.isdir('results/' + self.__targetFileName):
-            os.mkdir('results/' + self.__targetFileName)
-            os.mkdir('results/' + self.__targetFileName + '/input')
-            os.mkdir('results/' + self.__targetFileName + '/output')
-        fileManagement.saveData(mutations, 'results/' + self.__targetFileName + '/input/' +
+        fileManagement.saveData(mutations, 'result/' + self.__targetFileName + '/input/' +
                                 self.__targetFileName + '_input_' + str(self.__executionNum) + '.list')
 
     def __exportOutputs(self):
-        if not os.path.isdir('results/' + self.__targetFileName):
-            os.mkdir('results/' + self.__targetFileName)
-            os.mkdir('results/' + self.__targetFileName + '/input')
-            os.mkdir('results/' + self.__targetFileName + '/output')
-
-        with open('results/' + self.__targetFileName + '/output/' + self.__targetFileName
+        with open('result/' + self.__targetFileName + '/output/' + self.__targetFileName
                   + '_output_' + str(self.__executionNum) + '.txt', 'w') as f:
             log = ''.join(self.__getTraceLog())
             f.write(log)
@@ -66,13 +57,16 @@ class Fuzzer:
         self.__targetFunction.target(*[self.__cDataMaker.castToCDataType(i, t.makeFormalDataType()) for i, t in
                                        zip(newInput, self.__arguments)])
 
-        syscallSet = self.__getSyscallSet()
+        self.__exportInputs(newInput)
+        self.__exportOutputs()
+
+        '''syscallSet = self.__getSyscallSet()
         if self.__checkNewSyscall(syscallSet):
             self.__inputSyscallsTable.append((newInput, syscallSet))
             print('%dth execution: ' % self.__executionNum, end='')
             print(newInput, end=', ')
             print('called syscall numbers: ', end='')
-            print(syscallSet)
+            print(syscallSet)'''
 
     def __checkNewSyscall(self, newSyscalls):
         if len(newSyscalls - self.__foundedSyscallSet) != 0:
