@@ -1,6 +1,9 @@
 import os
 import re
 import importlib
+import subprocess
+import time
+
 import cffi
 
 import fileManagement
@@ -13,6 +16,7 @@ class Fuzzer:
     __mutators = []
     __cDataMaker = cDataMaker.CDataMaker()
     __arguments = []
+    __ptraceSyscalls = set()
     __foundedSyscallSet = set()
     __inputSyscallsTable = []
     __pid = str(os.getpid())
@@ -54,19 +58,23 @@ class Fuzzer:
     def executeWithMutationSequence(self):
         self.__executionNum += 1
         newInput = self.__makeMutationSequence()
-        self.__targetFunction.target(*[self.__cDataMaker.castToCDataType(i, t.makeFormalDataType()) for i, t in
-                                       zip(newInput, self.__arguments)])
+        ptrace = subprocess.Popen(['./ptrace', self.__pid], stdout=subprocess.PIPE, encoding='utf-8')
+        subprocess.call('echo %s > /sys/kernel/debug/tracing/set_ftrace_notrace_pid' % str(ptrace.pid), shell=True)
+        try:
+            self.__targetFunction.target(*[self.__cDataMaker.castToCDataType(i, t.makeFormalDataType())
+                                           for i, t in zip(newInput, self.__arguments)])
+            time.sleep(.001)
+            ptrace.send_signal(10)
+            foundedSyscalls = set(ptrace.stdout.read().split('\n')[:-1])
+            ptrace.wait()
+        finally:
+            ptrace.terminate()
 
-        self.__exportInputs(newInput)
-        self.__exportOutputs()
-
-        '''syscallSet = self.__getSyscallSet()
-        if self.__checkNewSyscall(syscallSet):
-            self.__inputSyscallsTable.append((newInput, syscallSet))
-            print('%dth execution: ' % self.__executionNum, end='')
-            print(newInput, end=', ')
-            print('called syscall numbers: ', end='')
-            print(syscallSet)'''
+        if len(foundedSyscalls - self.__ptraceSyscalls) != 0:
+            print('found new system call')
+            self.__ptraceSyscalls = self.__ptraceSyscalls | foundedSyscalls
+            self.__exportInputs(newInput)
+            self.__exportOutputs()
 
     def __checkNewSyscall(self, newSyscalls):
         if len(newSyscalls - self.__foundedSyscallSet) != 0:

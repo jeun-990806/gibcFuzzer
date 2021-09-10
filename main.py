@@ -23,19 +23,35 @@ if len(sys.argv) > 2:
     codeGenerator = targetCodeBuilder.Builder(path, targetName)
     codeGenerator.build()
 
-    fuzzer = fuzzer.Fuzzer(targetFile)
-    # tracer set
+    subprocess.call('echo %s > /sys/kernel/debug/tracing/set_ftrace_pid' % str(os.getpid()), shell=True)
     subprocess.call('echo "*sys_enter*" > /sys/kernel/debug/tracing/set_ftrace_filter', shell=True)
-    subprocess.call('echo "*mark_write*" >> /sys/kernel/debug/tracing/set_ftrace_filter', shell=True)
     subprocess.call('echo 1 > /sys/kernel/debug/tracing/events/raw_syscalls/sys_enter/enable', shell=True)
     subprocess.call('echo function > /sys/kernel/debug/tracing/current_tracer', shell=True)
+    subprocess.call('echo 0 > /proc/sys/kernel/yama/ptrace_scope', shell=True)
+
+    print('-----------------------------------\nsetting')
+    print('set_ftrace_pid: ')
+    subprocess.call('cat /sys/kernel/debug/tracing/set_ftrace_pid', shell=True)
+    print('set_ftrace_filter: "*sys_enter*"')
+    print('sys_enter: ENABLED')
+    print('current_tracer: function')
+    print('-----------------------------------')
+
+    time.sleep(1)
+
+    fuzzer = fuzzer.Fuzzer(targetFile)
+    # tracer set
 
     if not os.path.isdir('result/' + targetName):
-        os.mkdir('result/' + targetName)
-        os.mkdir('result/' + targetName + '/input/')
-        os.mkdir('result/' + targetName + '/output/')
+        print(' * make ' + targetName + ' folder in result/ directory.')
+        os.mkdir('result/' + targetName, mode=0o777)
+        os.mkdir('result/' + targetName + '/input/', mode=0o777)
+        os.mkdir('result/' + targetName + '/output/', mode=0o777)
 
     startTime = time.time()
-    while time.time() - startTime < 300:
-        fuzzer.executeWithMutationSequence()
-    del fuzzer
+    try:
+        while time.time() - startTime < 300:
+            fuzzer.executeWithMutationSequence()
+    finally:
+        del fuzzer
+    # subprocess.call('rm %s' % targetFile, shell=True)

@@ -25,7 +25,7 @@ class CDataMaker:
         elif '*' in dataTypeName:
             value = self.castToCDataType(byteSequence, dataTypeName[:-1])
             return self.__ffi.new(cDataType.makeFormalDataType(), value)
-        raise NameError(dataTypeName + 'is not basic C Data Type.')
+        raise NameError(dataTypeName + ' is not basic C Data Type.')
 
 
 def cmakerTestCode():

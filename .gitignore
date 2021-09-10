@@ -10,3 +10,13 @@
 /target.o
 /constantMutator.py
 /structureMutator.py
+/cffiTest.py
+/ptraceTest.py
+/check.sh
+/code.c
+/result/
+/Errors/
+/com/
+/backup/
+/test
+/toListTXT.sh
